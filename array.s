@@ -2,7 +2,7 @@
 .section .data
     dividend:   .int    39
     divisor:    .int    5
-
+    newline:    .ascii "\n"
 .section .bss
     buffer:   .space 12 
 
@@ -25,45 +25,51 @@ _start:
     # sum : -32 
 
     # n
-    movl $5, -8(%rbp)
-        movl -8(%rbp), %eax #debug stmt
+    movl $5, -4(%rbp)
+        movl -4(%rbp), %eax #debug stmt
     
     # arr[0]
-    movl $1, -12(%rbp)
-        movl -12(%rbp), %eax 
-        lea -12(%rbp), %rdi 
+    movl $1, -8(%rbp)
+        movl -8(%rbp), %eax 
+        lea -8(%rbp), %rdi 
     # arr[1]
-    movl $2, -16(%rbp)
-        movl -16(%rbp), %eax
+    movl $2, -12(%rbp)
+        movl -12(%rbp), %eax
 
     # arr[2]
-    movl $3, -20(%rbp)
-        movl -20(%rbp), %eax 
+    movl $3, -16(%rbp)
+        movl -16(%rbp), %eax 
     
     # arr[3]
-    movl $4, -24(%rbp)
-        movl -24(%rbp), %eax
+    movl $4, -20(%rbp)
+        movl -20(%rbp), %eax
 
     # arr[4]
-    movl $5, -28(%rbp)
-        movl -28(%rbp), %eax 
+    movl $5, -24(%rbp)
+        movl -24(%rbp), %eax 
 
 
     # pushing arguments 
         # n
         subq $4, %rsp
-        movl -8(%rbp), %eax 
+        movl -4(%rbp), %eax 
         movl %eax, (%rsp)
 
         # arr
         subq $8, %rsp 
-        leaq -12(%rbp), %rax
+        leaq -8(%rbp), %rax
         movq %rax, (%rsp)
 
     call _get_sum
 
+    # print the number 
     movl %eax, %esi
-    call _printf 
+    call _print_num 
+
+    # print newline 
+    leaq newline, %rsi 
+    movq $1, %rdx 
+    call _print_str 
 
     call _exit_program
     popq %rbp 
@@ -76,13 +82,12 @@ _get_sum:
     # sum (%rsp)
     # i -4(%rsp)
 
-    movl $0, (%rbp)
     movl $0, -4(%rbp)
+    movl $0, -8(%rbp)
 
     # Checking received arguments 
-        movl 20(%rbp), %ebx
-        movl 24(%rbp), %ebx
-        movq 16(%rbp), %rbx 
+        movl 24(%rbp), %ebx       # n
+        movq 16(%rbp), %rbx       # arr
 
     # for(int i=0; i<n; i++){
     #   sum += arr[i]
@@ -90,28 +95,42 @@ _get_sum:
 
 # for loop start:
 for_loop:
-    movl -4(%rbp), %eax           # i
+    movl -8(%rbp), %eax           # i
 
     movq 16(%rbp), %rbx             #arr
+    
+    imulq $-1, %rax 
 
     movl (%rbx,%rax,4), %eax             # arr[i]
-    addl (%rbp), %eax             # sum += arr[i]
+    addl %eax, -4(%rbp)             # sum += arr[i]
 
     movl 24(%rbp), %eax           # n
-    addl $1, -4(%rbp)
+    addl $1, -8(%rbp)
         #checking 
-            movl -4(%rbp), %ecx 
+            movl -8(%rbp), %ecx 
     cmpl  %eax, %ecx           # (i < n)? 
     jl for_loop
 
-    movl (%rbp), %eax
+    movl -4(%rbp), %eax
 
     addq $8, %rsp
     popq %rbp
     ret
 
-# print routine
-_printf:
+
+#print routine to print str declared in the data 
+# section 
+# address of the str in %rsi 
+# number of bytes in %rdx 
+_print_str:
+    movq $1, %rax
+    movq $1, %rdi
+    syscall
+    ret 
+
+# print number routine
+# store the value to be printed in %esi 
+_print_num:
     # assume krte hain ki esi mein hogi value 
     # which needs to be printed 
     pushq %rbp 

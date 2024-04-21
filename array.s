@@ -1,16 +1,56 @@
-
-.section .data
-    dividend:   .int    39
-    divisor:    .int    5
-    newline:    .ascii "\n"
-.section .bss
+.bss
     buffer:   .space 12 
 
-.section .text
-.global _start
+.text
 
 
-_start:
+.global main
+
+_get_sum:
+    pushq %rbp
+    movq %rsp, %rbp 
+    
+    subq $8, %rsp #space for sum 
+    # sum (%rsp)
+    # i -4(%rsp)
+
+    movl $0, -4(%rbp)
+    movl $0, -8(%rbp)
+
+    # Checking received arguments 
+        movl 24(%rbp), %ebx       # n
+        movq 16(%rbp), %rbx       # arr
+
+    # for(int i=0; i<n; i++){
+    #   sum += arr[i]
+    #}
+
+# for loop start:
+for_loop:
+    movl -8(%rbp), %eax           # i
+
+    movq 16(%rbp), %rbx             #arr
+    
+    imulq $-1, %rax 
+
+    movl (%rbx,%rax,4), %eax             # arr[i]
+    addl %eax, -4(%rbp)             # sum += arr[i]
+
+    movl 24(%rbp), %eax           # n
+    addl $1, -8(%rbp)
+        #checking 
+            movl -8(%rbp), %ecx 
+    cmpl  %eax, %ecx           # (i < n)? 
+    jl for_loop
+
+    movl -4(%rbp), %eax
+
+    addq $8, %rsp
+    popq %rbp
+    ret
+
+
+main:
     pushq %rbp
     movq %rsp, %rbp 
     
@@ -66,56 +106,9 @@ _start:
     movl %eax, %esi
     call _print_num 
 
-    # print newline 
-    leaq newline, %rsi 
-    movq $1, %rdx 
-    call _print_str 
 
     call _exit_program
     popq %rbp 
-
-_get_sum:
-    pushq %rbp
-    movq %rsp, %rbp 
-    
-    subq $8, %rsp #space for sum 
-    # sum (%rsp)
-    # i -4(%rsp)
-
-    movl $0, -4(%rbp)
-    movl $0, -8(%rbp)
-
-    # Checking received arguments 
-        movl 24(%rbp), %ebx       # n
-        movq 16(%rbp), %rbx       # arr
-
-    # for(int i=0; i<n; i++){
-    #   sum += arr[i]
-    #}
-
-# for loop start:
-for_loop:
-    movl -8(%rbp), %eax           # i
-
-    movq 16(%rbp), %rbx             #arr
-    
-    imulq $-1, %rax 
-
-    movl (%rbx,%rax,4), %eax             # arr[i]
-    addl %eax, -4(%rbp)             # sum += arr[i]
-
-    movl 24(%rbp), %eax           # n
-    addl $1, -8(%rbp)
-        #checking 
-            movl -8(%rbp), %ecx 
-    cmpl  %eax, %ecx           # (i < n)? 
-    jl for_loop
-
-    movl -4(%rbp), %eax
-
-    addq $8, %rsp
-    popq %rbp
-    ret
 
 
 #print routine to print str declared in the data 
